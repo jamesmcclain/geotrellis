@@ -29,7 +29,7 @@ object FileRDDReader {
     threads: Int = ConfigFactory.load().getInt("geotrellis.file.threads.rdd.read")
   )(implicit sc: SparkContext): RDD[(K, V)] = {
     if(queryKeyBounds.isEmpty) return sc.emptyRDD[(K, V)]
-    
+
     val ranges = if (queryKeyBounds.length > 1)
       MergeQueue(queryKeyBounds.flatMap(decomposeBounds))
     else
