@@ -32,4 +32,22 @@ object GeowaveKeyIndexMethod extends GeowaveKeyIndexMethod {
       }
     }
 
+  def apply(temporalResolution: Int): KeyIndexMethod[SpaceTimeKey] =
+    new KeyIndexMethod[SpaceTimeKey] {
+      def createIndex(keyBounds: KeyBounds[SpaceTimeKey]) = {
+        val xResolution = resolution(keyBounds.maxKey.col, keyBounds.minKey.col)
+        val yResolution = resolution(keyBounds.maxKey.row, keyBounds.minKey.row)
+        GeowaveSpaceTimeKeyIndex(keyBounds, xResolution, yResolution, temporalResolution, "year")
+      }
+    }
+
+  def apply(temporalResolution: Int, unit: GeowaveBinUnit): KeyIndexMethod[SpaceTimeKey] =
+    new KeyIndexMethod[SpaceTimeKey] {
+      def createIndex(keyBounds: KeyBounds[SpaceTimeKey]) = {
+        val xResolution = resolution(keyBounds.maxKey.col, keyBounds.minKey.col)
+        val yResolution = resolution(keyBounds.maxKey.row, keyBounds.minKey.row)
+        GeowaveSpaceTimeKeyIndex(keyBounds, xResolution, yResolution, temporalResolution, unit)
+      }
+    }
+
 }
