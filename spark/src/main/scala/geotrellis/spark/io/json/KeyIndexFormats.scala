@@ -85,11 +85,12 @@ trait KeyIndexFormats {
     private lazy val registry: Map[ClassTag[_], List[KeyIndexFormatEntry[_, _]]] = {
       val entryRegistry = new KeyIndexRegistry
 
-      entryRegistry register KeyIndexFormatEntry[SpatialKey, HilbertSpatialKeyIndex](HilbertSpatialKeyIndexFormat.TYPE_NAME)
-      entryRegistry register KeyIndexFormatEntry[SpatialKey, ZSpatialKeyIndex](ZSpatialKeyIndexFormat.TYPE_NAME)
-      entryRegistry register KeyIndexFormatEntry[SpatialKey, RowMajorSpatialKeyIndex](RowMajorSpatialKeyIndexFormat.TYPE_NAME)
       entryRegistry register KeyIndexFormatEntry[SpatialKey, GeowaveSpatialKeyIndex](GeowaveSpatialKeyIndexFormat.TYPE_NAME)
+      entryRegistry register KeyIndexFormatEntry[SpatialKey, HilbertSpatialKeyIndex](HilbertSpatialKeyIndexFormat.TYPE_NAME)
+      entryRegistry register KeyIndexFormatEntry[SpatialKey, RowMajorSpatialKeyIndex](RowMajorSpatialKeyIndexFormat.TYPE_NAME)
+      entryRegistry register KeyIndexFormatEntry[SpatialKey, ZSpatialKeyIndex](ZSpatialKeyIndexFormat.TYPE_NAME)
 
+      entryRegistry register KeyIndexFormatEntry[SpaceTimeKey, GeowaveSpaceTimeKeyIndex](GeowaveSpaceTimeKeyIndexFormat.TYPE_NAME)
       entryRegistry register KeyIndexFormatEntry[SpaceTimeKey, HilbertSpaceTimeKeyIndex](HilbertSpaceTimeKeyIndexFormat.TYPE_NAME)
       entryRegistry register KeyIndexFormatEntry[SpaceTimeKey, ZSpaceTimeKeyIndex](ZSpaceTimeKeyIndexFormat.TYPE_NAME)
 
@@ -157,6 +158,47 @@ trait KeyIndexFormats {
         }
         case _ =>
           throw new DeserializationException("Wrong KeyIndex type: GeowaveSpatialKeyIndex expected.")
+      }
+  }
+
+  implicit object GeowaveSpaceTimeKeyIndexFormat extends RootJsonFormat[GeowaveSpaceTimeKeyIndex] {
+    final def TYPE_NAME = "geowave"
+
+    def write(obj: GeowaveSpaceTimeKeyIndex): JsValue =
+      JsObject(
+        "type"   -> JsString(TYPE_NAME),
+        "properties" -> JsObject(
+          "keyBounds"          -> obj.keyBounds.toJson,
+          "xResolution"        -> obj.xResolution.toJson,
+          "yResolution"        -> obj.yResolution.toJson,
+          "temporalResolution" -> obj.temporalResolution.toJson,
+          "unit"               -> obj.unit.name.toJson
+        )
+      )
+
+    def read(value: JsValue): GeowaveSpaceTimeKeyIndex =
+      value.asJsObject.getFields("type", "properties") match {
+        case Seq(JsString(typeName), properties) => {
+          if (typeName != TYPE_NAME)
+            throw new DeserializationException(s"Wrong KeyIndex type: ${TYPE_NAME} expected.")
+
+          properties.convertTo[JsObject]
+            .getFields("keyBounds", "xResolution", "yResolution", "temporalResolution", "unit") match {
+            case Seq(kb, xr, yr, tr, u) =>
+              GeowaveSpaceTimeKeyIndex(
+                kb.convertTo[KeyBounds[SpaceTimeKey]],
+                xr.convertTo[Int],
+                yr.convertTo[Int],
+                tr.convertTo[Int],
+                u.convertTo[String]
+              )
+            case _ =>
+              throw new DeserializationException(
+                "Wrong KeyIndex constructor arguments: GeowaveSpaceTimeKeyIndex constructor arguments expected.")
+          }
+        }
+        case _ =>
+          throw new DeserializationException("Wrong KeyIndex type: GeowaveSpaceTimeKeyIndex expected.")
       }
   }
 
