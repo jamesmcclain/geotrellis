@@ -172,6 +172,7 @@ trait KeyIndexFormats {
           "xResolution"        -> obj.xResolution.toJson,
           "yResolution"        -> obj.yResolution.toJson,
           "temporalResolution" -> obj.temporalResolution.toJson,
+          "epochBytes"         -> obj.epochBytes.toJson,
           "unit"               -> obj.unit.name.toJson
         )
       )
@@ -183,13 +184,14 @@ trait KeyIndexFormats {
             throw new DeserializationException(s"Wrong KeyIndex type: ${TYPE_NAME} expected.")
 
           properties.convertTo[JsObject]
-            .getFields("keyBounds", "xResolution", "yResolution", "temporalResolution", "unit") match {
-            case Seq(kb, xr, yr, tr, u) =>
+            .getFields("keyBounds", "xResolution", "yResolution", "temporalResolution", "epochBytes", "unit") match {
+            case Seq(kb, xr, yr, tr, ep, u) =>
               GeowaveSpaceTimeKeyIndex(
                 kb.convertTo[KeyBounds[SpaceTimeKey]],
                 xr.convertTo[Int],
                 yr.convertTo[Int],
                 tr.convertTo[Int],
+                ep.convertTo[Int],
                 u.convertTo[String]
               )
             case _ =>
