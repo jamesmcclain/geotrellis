@@ -26,8 +26,8 @@ object GeowaveKeyIndexMethod extends GeowaveKeyIndexMethod {
   implicit def spatialKeyIndexMethod(m: GeowaveKeyIndexMethod): KeyIndexMethod[SpatialKey] =
     new KeyIndexMethod[SpatialKey] {
       def createIndex(keyBounds: KeyBounds[SpatialKey]): KeyIndex[SpatialKey] = {
-        val xBits = resolution(keyBounds.maxKey.col, keyBounds.minKey.col)
-        val yBits = resolution(keyBounds.maxKey.row, keyBounds.minKey.row)
+        val xBits = resolution(keyBounds.maxKey.col, keyBounds.minKey.col) + 1
+        val yBits = resolution(keyBounds.maxKey.row, keyBounds.minKey.row) + 1
         new GeowaveSpatialKeyIndex(keyBounds, xBits, yBits)
       }
     }
@@ -35,8 +35,8 @@ object GeowaveKeyIndexMethod extends GeowaveKeyIndexMethod {
   def apply(temporalResolution: Int): KeyIndexMethod[SpaceTimeKey] =
     new KeyIndexMethod[SpaceTimeKey] {
       def createIndex(keyBounds: KeyBounds[SpaceTimeKey]) = {
-        val xResolution = resolution(keyBounds.maxKey.col, keyBounds.minKey.col)
-        val yResolution = resolution(keyBounds.maxKey.row, keyBounds.minKey.row)
+        val xResolution = resolution(keyBounds.maxKey.col, keyBounds.minKey.col) + 1
+        val yResolution = resolution(keyBounds.maxKey.row, keyBounds.minKey.row) + 1
         GeowaveSpaceTimeKeyIndex(keyBounds, xResolution, yResolution, temporalResolution, 1, "year")
       }
     }
@@ -44,8 +44,8 @@ object GeowaveKeyIndexMethod extends GeowaveKeyIndexMethod {
   def apply(temporalResolution: Int, unit: GeowaveBinUnit): KeyIndexMethod[SpaceTimeKey] =
     new KeyIndexMethod[SpaceTimeKey] {
       def createIndex(keyBounds: KeyBounds[SpaceTimeKey]) = {
-        val xResolution = resolution(keyBounds.maxKey.col, keyBounds.minKey.col)
-        val yResolution = resolution(keyBounds.maxKey.row, keyBounds.minKey.row)
+        val xResolution = resolution(keyBounds.maxKey.col, keyBounds.minKey.col) + 1
+        val yResolution = resolution(keyBounds.maxKey.row, keyBounds.minKey.row) + 1
         GeowaveSpaceTimeKeyIndex(keyBounds, xResolution, yResolution, temporalResolution, 1, unit)
       }
     }

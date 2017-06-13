@@ -31,14 +31,53 @@ import mil.nga.giat.geowave.core.index.sfc.tiered.{ TieredSFCIndexFactory, Tiere
 import scala.collection.JavaConverters._
 
 
-sealed trait GeowaveBinUnit { def unit: BinUnit; def name: String }
-case class GeowaveDecade() extends GeowaveBinUnit { val unit = BinUnit.DECADE; val name = "decade" }
-case class GeowaveYear() extends GeowaveBinUnit { val unit = BinUnit.YEAR; val name = "year" }
-case class GeowaveMonth() extends GeowaveBinUnit { val unit = BinUnit.MONTH; val name = "month" }
-case class GeowaveWeek() extends GeowaveBinUnit { val unit = BinUnit.WEEK; val name = "week" }
-case class GeowaveDay() extends GeowaveBinUnit { val unit = BinUnit.DAY; val name = "day" }
-case class GeowaveHour() extends GeowaveBinUnit { val unit = BinUnit.HOUR; val name = "hour" }
-case class GeowaveMinute() extends GeowaveBinUnit { val unit = BinUnit.MINUTE; val name = "minute" }
+sealed trait GeowaveBinUnit {
+  def unit: BinUnit
+  def name: String
+  def bytes: Int
+}
+
+case class GeowaveDecade() extends GeowaveBinUnit {
+  val unit = BinUnit.DECADE
+  val name = "decade"
+  val bytes = 4
+}
+
+case class GeowaveYear() extends GeowaveBinUnit {
+  val unit = BinUnit.YEAR
+  val name = "year"
+  val bytes = 4
+}
+
+case class GeowaveMonth() extends GeowaveBinUnit {
+  val unit = BinUnit.MONTH
+  val name = "month"
+  val bytes = 7
+}
+
+case class GeowaveWeek() extends GeowaveBinUnit {
+  val unit = BinUnit.WEEK
+  val name = "week"
+  val bytes = 7
+}
+
+case class GeowaveDay() extends GeowaveBinUnit {
+  val unit = BinUnit.DAY
+  val name = "day"
+  val bytes = 10
+}
+
+case class GeowaveHour() extends GeowaveBinUnit {
+  val unit = BinUnit.HOUR
+  val name = "hour"
+  val bytes = 13
+}
+
+case class GeowaveMinute() extends GeowaveBinUnit {
+  val unit = BinUnit.MINUTE
+  val name = "minute"
+  val bytes = 16
+}
 
 object GeowaveSpaceTimeKeyIndex {
   def apply(
@@ -117,7 +156,7 @@ class GeowaveSpaceTimeKeyIndex(
 
   val maxRangeDecomposition = 5000
 
-  require((0 <= epochBytes) && (epochBytes <= 4))
+  require((0 <= epochBytes) && (epochBytes <= unit.bytes))
 
   val KeyBounds(SpaceTimeKey(minCol, minRow, minTime), SpaceTimeKey(maxCol, maxRow, maxTime)) = keyBounds
   @transient lazy val dim1 = new SFCDimensionDefinition(new BasicDimensionDefinition(minCol, maxCol), xResolution)
@@ -129,9 +168,9 @@ class GeowaveSpaceTimeKeyIndex(
   // Arrays SEEM TO BE big endian
   private def idToLong(id: Array[Byte]): Long = {
     id
-      .drop(1)              // drop tier byte
-      .drop(4 - epochBytes) // only keep the given number of epoch bytes
-      .take(8)              // take eight most significant bytes
+      .drop(1)                       // drop tier byte
+      .drop(unit.bytes - epochBytes) // only keep the given number of epoch bytes
+      .take(8)                       // take eight most significant bytes
       .foldLeft(0L)({ (accumulator, value) => (accumulator << 8) + value.toLong })
   }
 
