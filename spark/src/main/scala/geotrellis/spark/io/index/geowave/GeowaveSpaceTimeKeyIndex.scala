@@ -59,11 +59,14 @@ object GeowaveSpaceTimeKeyIndex {
     spatialResolution: Int, temporalResolution: Int,
     unit: GeowaveBinUnit
   ): GeowaveSpaceTimeKeyIndex =
-    apply(keyBounds, spatialResolution, spatialResolution, temporalResolution, unit)
+    apply(keyBounds, spatialResolution, spatialResolution, temporalResolution, 1, unit)
 
   def apply(
     keyBounds: KeyBounds[SpaceTimeKey],
-    xResolution: Int, yResolution: Int, temporalResolution: Int,
+    xResolution: Int,
+    yResolution: Int,
+    temporalResolution: Int,
+    epochBytes: Int,
     unit: String
   ): GeowaveSpaceTimeKeyIndex = {
     val binUnit = unit match {
@@ -77,15 +80,18 @@ object GeowaveSpaceTimeKeyIndex {
       case _ => throw new Exception
     }
 
-    new GeowaveSpaceTimeKeyIndex(keyBounds, xResolution, yResolution, temporalResolution, binUnit)
+    new GeowaveSpaceTimeKeyIndex(keyBounds, xResolution, yResolution, temporalResolution, epochBytes, binUnit)
   }
 
   def apply(
     keyBounds: KeyBounds[SpaceTimeKey],
-    xResolution: Int, yResolution: Int, temporalResolution: Int,
+    xResolution: Int,
+    yResolution: Int,
+    temporalResolution: Int,
+    epochBytes: Int,
     unit: GeowaveBinUnit
   ): GeowaveSpaceTimeKeyIndex =
-    new GeowaveSpaceTimeKeyIndex(keyBounds, xResolution, yResolution, temporalResolution, unit)
+    new GeowaveSpaceTimeKeyIndex(keyBounds, xResolution, yResolution, temporalResolution, epochBytes, unit)
 }
 
 /**
@@ -96,6 +102,7 @@ object GeowaveSpaceTimeKeyIndex {
   * @param   xResolution         The number of bits of resolution requested/required by the x-axis
   * @param   yResoltuion         The number of bits of resolution requested/required by the y-axis
   * @param   temporalResolution  The number of bits of resolution requested/required for temporal bins
+  * @param   epochBytes          The number of epoch bytes to keep
   * @param   unit                The length (in time) of temporal bins
   * @author  James McClain
   */
@@ -104,10 +111,13 @@ class GeowaveSpaceTimeKeyIndex(
   val xResolution: Int,
   val yResolution: Int,
   val temporalResolution: Int,
+  val epochBytes: Int,
   val unit: GeowaveBinUnit
 ) extends KeyIndex[SpaceTimeKey] {
 
   val maxRangeDecomposition = 5000
+
+  require((0 <= epochBytes) && (epochBytes <= 4))
 
   val KeyBounds(SpaceTimeKey(minCol, minRow, minTime), SpaceTimeKey(maxCol, maxRow, maxTime)) = keyBounds
   @transient lazy val dim1 = new SFCDimensionDefinition(new BasicDimensionDefinition(minCol, maxCol), xResolution)
@@ -118,7 +128,11 @@ class GeowaveSpaceTimeKeyIndex(
 
   // Arrays SEEM TO BE big endian
   private def idToLong(id: Array[Byte]): Long = {
-    id.take(8).foldLeft(0L)({ (accumulator, value) => (accumulator << 8) + value.toLong })
+    id
+      .drop(1)              // drop tier byte
+      .drop(4 - epochBytes) // only keep the given number of epoch bytes
+      .take(8)              // take eight most significant bytes
+      .foldLeft(0L)({ (accumulator, value) => (accumulator << 8) + value.toLong })
   }
 
   // ASSUMED to be used for insertion

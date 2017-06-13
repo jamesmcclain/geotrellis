@@ -61,7 +61,10 @@ class GeowaveSpatialKeyIndex(val keyBounds: KeyBounds[SpatialKey], val xResoluti
 
   // Arrays SEEM TO BE big endian
   private def idToLong(id: Array[Byte]): Long = {
-    id.take(8).foldLeft(0L)({ (accumulator, value) => (accumulator << 8) + value.toLong })
+    id
+      .drop(1) // drop tier byte
+      .take(8) // take eight most significant bytes
+      .foldLeft(0L)({ (accumulator, value) => (accumulator << 8) + value.toLong })
   }
 
   // ASSUMED to be used for insertion
