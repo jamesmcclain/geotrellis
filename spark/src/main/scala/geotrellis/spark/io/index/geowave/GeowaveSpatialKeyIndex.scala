@@ -59,15 +59,14 @@ class GeowaveSpatialKeyIndex(val keyBounds: KeyBounds[SpatialKey], val xResoluti
   @transient lazy val dimensions: Array[SFCDimensionDefinition] = Array(dim1, dim2)
   @transient lazy val strategy: TieredSFCIndexStrategy = TieredSFCIndexFactory.createSingleTierStrategy(dimensions, SFCType.HILBERT)
 
-  // Arrays SEEM TO BE big endian
   private def idToLong(id: Array[Byte]): Long = {
-    id
-      .drop(1) // drop tier byte
-      .take(8) // take eight most significant bytes
-      .foldLeft(0L)({ (accumulator, value) => (accumulator << 8) + value.toLong })
+    val bytes =
+      id
+        .drop(1) // drop tier byte
+        .take(7) // take seven most significant bytes
+    BigInt(Array[Byte](1) ++ bytes).toLong // Tack on MSB to make sure number is positive
   }
 
-  // ASSUMED to be used for insertion
   def toIndex(key: SpatialKey): Long = {
     val SpatialKey(col, row) = key
     val range1 = new NumericRange(col, col)
@@ -79,7 +78,6 @@ class GeowaveSpatialKeyIndex(val keyBounds: KeyBounds[SpatialKey], val xResoluti
     idToLong(insertionIds.get(0).getBytes())
   }
 
-  // ASSUMED to be used for queries
   def indexRanges(keyRange: (SpatialKey, SpatialKey)): Seq[(Long, Long)] = {
     val (SpatialKey(col1, row1), SpatialKey(col2, row2)) = keyRange
     val minCol = math.min(col1, col2)

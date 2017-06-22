@@ -24,6 +24,7 @@ trait SpatialKeyIndexMethods {
     Map(
       "row major" -> RowMajorKeyIndexMethod,
       "z order" -> ZCurveKeyIndexMethod,
+      "geowave" -> GeowaveKeyIndexMethod,
       "hilbert" -> HilbertKeyIndexMethod
     )
 }

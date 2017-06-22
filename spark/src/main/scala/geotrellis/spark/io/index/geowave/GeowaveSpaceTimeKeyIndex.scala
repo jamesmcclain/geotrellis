@@ -167,11 +167,12 @@ class GeowaveSpaceTimeKeyIndex(
 
   // Arrays SEEM TO BE big endian
   private def idToLong(id: Array[Byte]): Long = {
-    id
-      .drop(1)                       // drop tier byte
-      .drop(unit.bytes - epochBytes) // only keep the given number of epoch bytes
-      .take(8)                       // take eight most significant bytes
-      .foldLeft(0L)({ (accumulator, value) => (accumulator << 8) + value.toLong })
+    val bytes =
+      id
+        .drop(1)                       // drop tier byte
+        .drop(unit.bytes - epochBytes) // only keep the given number of epoch bytes
+        .take(7)                       // take seven most significant bytes
+    BigInt(Array[Byte](1) ++ bytes).toLong // Tack on MSB to make sure number is positive
   }
 
   // ASSUMED to be used for insertion

@@ -32,6 +32,13 @@ object GeowaveKeyIndexMethod extends GeowaveKeyIndexMethod {
       }
     }
 
+  def bits(xBits: Int, yBits: Int): KeyIndexMethod[SpatialKey] =
+    new KeyIndexMethod[SpatialKey] {
+      def createIndex(keyBounds: KeyBounds[SpatialKey]): KeyIndex[SpatialKey] = {
+        new GeowaveSpatialKeyIndex(keyBounds, xBits, yBits)
+      }
+    }
+
   def apply(temporalResolution: Int): KeyIndexMethod[SpaceTimeKey] =
     new KeyIndexMethod[SpaceTimeKey] {
       def createIndex(keyBounds: KeyBounds[SpaceTimeKey]) = {
